@@ -12,10 +12,27 @@ var pageSchema = new mongoose.Schema({
   title:    {type: String, required: true},
   urlTitle: {type: String, required: true},
   content:  {type: String, required: true},
-  status:   {typ: String, enum: ['open','closed'],
+  status:   {type: String, enum: ['open','closed']},
   date:     {type: Date, default: Date.now},
   author:   {type: mongoose.Schema.Types.ObjectId, ref: 'User'}
+
 });
+
+pageSchema.pre('validate', function (next) {
+  if (this.title) {
+    // Removes all non-alphanumeric characters from title
+    // And make whitespace underscore
+    this.urlTitle = this.title.replace(/\s+/g, '_').replace(/\W/g, '');
+  } else {
+    // Generates random 5 letter string
+    this.urlTitle = Math.random().toString(36).substring(2, 7);
+  }
+  next();
+});
+
+pageSchema.virtual('route').get(function() {
+  return "/wiki/" + this.urlTitle;
+})
 
 var userSchema = new mongoose.Schema({
   name: {type: String, required: true},
